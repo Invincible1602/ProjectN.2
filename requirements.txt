@@ -1,0 +1,7 @@
+tensorflow
+transformers
+gtts
+requests
+fastapi
+pydantic
+uvicorn
