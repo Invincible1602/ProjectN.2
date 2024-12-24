@@ -1,172 +1,141 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-  Button,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Speech from "expo-speech";
+    View,
+    Text,
+    FlatList,
+    StyleSheet,
+    ActivityIndicator,
+    TouchableOpacity,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import CategoryComponent from '../components/CategoryComponent';
 
-const NewsListScreen = () => {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+const API_KEY = 'pub_62821603e0100105f92b76bbd3e010a2bb5d5';
+const COUNTRY = 'in';
+const LANGUAGE = 'en';
+const NEWS_URL = `https://newsdata.io/api/1/news?apikey=${API_KEY}&country=${COUNTRY}&language=${LANGUAGE}`;
 
-  useEffect(() => {
-    const getArticles = async () => {
-      try {
-        const fetchedArticles = await fetchNewsArticles();
-        setArticles(fetchedArticles);
-      } catch (error) {
-        console.error("Error fetching articles:", error);
-      } finally {
-        setLoading(false);
-      }
+const HomeScreen = ({ navigation }) => {
+    const [news, setNews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchNews = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(NEWS_URL);
+            const data = await response.json();
+            setNews(data.results);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching news:', error);
+            setLoading(false);
+        }
     };
-    getArticles();
-  }, []);
 
-  const stopSpeaking = () => {
-    if (isSpeaking) {
-      Speech.stop();
-      setIsSpeaking(false);
-    }
-  };
+    useEffect(() => {
+        fetchNews();
+    }, []);
 
-  const toggleReadTitlesAloud = () => {
-    stopSpeaking();
-    const titles = articles.map((article) => article.title).join(", ");
-    Speech.speak(`Here are the article titles: ${titles}`, {
-      onDone: () => setIsSpeaking(false),
-      onError: () => setIsSpeaking(false),
-    });
-    setIsSpeaking(true);
-  };
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchNews();
+        setRefreshing(false);
+    };
 
-  const handleReadSummary = (summary) => {
-    stopSpeaking();
-    Speech.speak(summary, {
-      onDone: () => setIsSpeaking(false),
-      onError: () => setIsSpeaking(false),
-    });
-    setIsSpeaking(true);
-  };
+    const categoryData = news.reduce((acc, item) => {
+        const category = item.category || 'General';
+        const language = item.language || 'Other';
 
-  if (loading) {
+        if (!acc[category]) {
+            acc[category] = {};
+        }
+        if (!acc[category][language]) {
+            acc[category][language] = [];
+        }
+
+        acc[category][language].push(item);
+        return acc;
+    }, {});
+
+    const categoryList = Object.keys(categoryData);
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading News...</Text>
-      </View>
-    );
-  }
+        <LinearGradient
+            colors={['#1c1c1c', '#333333']}
+            style={styles.container}
+        >
+            <Animated.View
+                entering={FadeInDown}
+                exiting={FadeOutUp}
+                style={styles.header}
+            >
+                <Text style={styles.headerText}>India's Latest Headlines</Text>
+            </Animated.View>
 
-  return (
-    <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {articles.map((article, index) => (
-          <NewsCard
-            key={index}
-            article={article}
-            handleReadSummary={handleReadSummary}
-          />
-        ))}
-      </ScrollView>
-      <TouchableOpacity
-        style={styles.readTitlesButton}
-        onPress={toggleReadTitlesAloud}
-      >
-        <Text style={styles.readTitlesButtonText}>Read Titles Aloud</Text>
-      </TouchableOpacity>
-    </View>
-  );
+            {loading ? (
+                <ActivityIndicator size="large" color="#fff" style={styles.loader} />
+            ) : (
+                <Animated.FlatList
+                    data={categoryList}
+                    keyExtractor={(item) => item}
+                    renderItem={({ item }) => (
+                        <CategoryComponent
+                            category={item}
+                            languageData={categoryData[item]}
+                        />
+                    )}
+                    entering={FadeInDown}
+                    exiting={FadeOutUp}
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                />
+            )}
+
+            <View style={styles.footer}>
+                <TouchableOpacity onPress={() => navigation.navigate('News')}>
+                    <Text style={styles.footerText}>Listen to Audio News</Text>
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
+    );
 };
 
-const NewsCard = ({ article, handleReadSummary }) => (
-  <TouchableOpacity style={styles.card}>
-    <LinearGradient
-      colors={["#ffffff", "#f0f0f0"]}
-      style={styles.cardGradient}
-    >
-      <Text style={styles.cardTitle}>{article.title}</Text>
-      <Text style={styles.cardSummary}>{article.summary}</Text>
-      <TouchableOpacity
-        style={styles.readButton}
-        onPress={() => handleReadSummary(article.summary)}
-      >
-        <Text style={styles.readButtonText}>Read Summary</Text>
-      </TouchableOpacity>
-    </LinearGradient>
-  </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 18,
-    color: "#555",
-  },
-  card: {
-    marginBottom: 15,
-    borderRadius: 10,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  cardGradient: {
-    padding: 15,
-    borderRadius: 10,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  cardSummary: {
-    fontSize: 14,
-    color: "#555",
-    marginVertical: 10,
-  },
-  readButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#ff3366",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  readButtonText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  readTitlesButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    alignItems: "center",
-    borderRadius: 5,
-    margin: 15,
-  },
-  readTitlesButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+    container: {
+        flex: 1,
+        padding: 10,
+    },
+    header: {
+        paddingVertical: 20,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#444',
+        marginBottom: 10,
+    },
+    headerText: {
+        color: '#fff',
+        fontSize: 26,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    loader: {
+        marginTop: 20,
+    },
+    footer: {
+        padding: 20,
+        alignItems: 'center',
+        backgroundColor: '#222',
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        marginTop: 10,
+    },
+    footerText: {
+        color: '#ff4500',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
 
-export default NewsListScreen;
+export default HomeScreen;
