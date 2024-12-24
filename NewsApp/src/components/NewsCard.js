@@ -1,75 +1,95 @@
 import React, { useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Audio } from "expo-av";
 
 const NewsCard = ({ article }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [sound, setSound] = useState();
 
-  const playAudio = async () => {
-    try {
-      const { audio_base64 } = article;
-
+  const toggleSpeech = async () => {
+    if (isSpeaking) {
       if (sound) {
-        // Stop and unload sound if already playing
         await sound.stopAsync();
-        await sound.unloadAsync();
         setSound(null);
-        setIsPlaying(false);
-        return;
+        setIsSpeaking(false);
       }
+    } else {
+      if (article.audio_base64) {
+        try {
+          const audioUri = `data:audio/mp3;base64,${article.audio_base64}`;
+          const { sound } = await Audio.Sound.createAsync(
+            { uri: audioUri },
+            { shouldPlay: true }
+          );
 
-      // Create audio URI from base64 string
-      const audioURI = `data:audio/mpeg;base64,${audio_base64}`;
-      const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioURI });
-      setSound(newSound);
+          setSound(sound);
+          setIsSpeaking(true);
 
-      // Handle playback status updates
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          setIsPlaying(false);
-          setSound(null);
+          sound.setOnPlaybackStatusUpdate((status) => {
+            if (status.didJustFinish) {
+              setIsSpeaking(false);
+            }
+          });
+        } catch (error) {
+          console.error("Error playing audio: ", error);
+          setIsSpeaking(false);
         }
-      });
-
-      // Start playing
-      await newSound.playAsync();
-      setIsPlaying(true);
-    } catch (error) {
-      console.error("Error playing audio:", error);
+      }
     }
   };
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{article.title}</Text>
-      <Text style={styles.summary}>{article.summary}</Text>
-      <Button title={isPlaying ? "Stop Audio" : "Play Audio"} onPress={playAudio} />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{article.title}</Text>
+        <Text style={styles.summary}>{article.summary}</Text>
+      </View>
+      <TouchableOpacity style={styles.readButton} onPress={toggleSpeech}>
+        <Text style={styles.readButtonText}>
+          {isSpeaking ? "Stop Listening" : "Listen to Summary"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#f9f9f9",
-    marginBottom: 10,
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: "#ffffff",
+    marginBottom: 15,
+    borderRadius: 8,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: "hidden",
+    padding: 15,
+  },
+  textContainer: {
+    marginBottom: 10,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "black", // Black color for title
     marginBottom: 5,
   },
   summary: {
     fontSize: 14,
-    color: "#555",
-    marginBottom: 10,
+    color: "#555555",
+    lineHeight: 20,
+  },
+  readButton: {
+    backgroundColor: "#1E90FF",
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  readButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
   },
 });
 
