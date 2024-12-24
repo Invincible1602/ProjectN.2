@@ -1,141 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-    View,
-    Text,
-    FlatList,
-    StyleSheet,
-    ActivityIndicator,
-    TouchableOpacity,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
-import CategoryComponent from '../components/CategoryComponent';
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+  Button,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Speech from "expo-speech";
 
-const API_KEY = 'pub_62821603e0100105f92b76bbd3e010a2bb5d5';
-const COUNTRY = 'in';
-const LANGUAGE = 'en';
-const NEWS_URL = `https://newsdata.io/api/1/news?apikey=${API_KEY}&country=${COUNTRY}&language=${LANGUAGE}`;
+const NewsListScreen = () => {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
-const HomeScreen = ({ navigation }) => {
-    const [news, setNews] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-
-    // Function to fetch news
-    const fetchNews = async () => {
-        setLoading(true);  // Set loading true when fetching news
-        try {
-            const response = await fetch(NEWS_URL);
-            const data = await response.json();
-            setNews(data.results);  // Set the fetched news data
-            setLoading(false);  // Set loading false when done
-        } catch (error) {
-            console.error('Error fetching news:', error);
-            setLoading(false);
-        }
+  useEffect(() => {
+    const getArticles = async () => {
+      try {
+        const fetchedArticles = await fetchNewsArticles();
+        setArticles(fetchedArticles);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setLoading(false);
+      }
     };
+    getArticles();
+  }, []);
 
-    // Fetch the news data on component mount
-    useEffect(() => {
-        fetchNews();
-    }, []);
+  const stopSpeaking = () => {
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    }
+  };
 
-    // Handle refresh action
-    const handleRefresh = async () => {
-        setRefreshing(true);
-        await fetchNews();  // Fetch new news on refresh
-        setRefreshing(false);  // Set refreshing false when done
-    };
+  const toggleReadTitlesAloud = () => {
+    stopSpeaking();
+    const titles = articles.map((article) => article.title).join(", ");
+    Speech.speak(`Here are the article titles: ${titles}`, {
+      onDone: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+    setIsSpeaking(true);
+  };
 
-    // Organize news data by category and language
-    const categoryData = news.reduce((acc, item) => {
-        const category = item.category || 'General';
-        const language = item.language || 'Other';
+  const handleReadSummary = (summary) => {
+    stopSpeaking();
+    Speech.speak(summary, {
+      onDone: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+    setIsSpeaking(true);
+  };
 
-        if (!acc[category]) {
-            acc[category] = {};
-        }
-        if (!acc[category][language]) {
-            acc[category][language] = [];
-        }
-
-        acc[category][language].push(item);
-        return acc;
-    }, {});
-
-    const categoryList = Object.keys(categoryData);
-
+  if (loading) {
     return (
-        <LinearGradient
-            colors={['#ff7e5f', '#feb47b']}
-            style={styles.container}
-        >
-            <Animated.View
-                entering={FadeInDown}
-                exiting={FadeOutUp}
-                style={styles.header}
-            >
-                <Text style={styles.headerText}>Latest News for India</Text>
-            </Animated.View>
-
-            {loading ? (
-                <ActivityIndicator size="large" color="#fff" style={styles.loader} />
-            ) : (
-                <Animated.FlatList
-                    data={categoryList}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                        <CategoryComponent
-                            category={item}
-                            languageData={categoryData[item]}
-                        />
-                    )}
-                    entering={FadeInDown}
-                    exiting={FadeOutUp}
-                    refreshing={refreshing}  // Set refreshing state to trigger spinner
-                    onRefresh={handleRefresh}  // Trigger news fetch on pull to refresh
-                />
-            )}
-
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => navigation.navigate('News')}>
-                    <Text style={styles.footerText}>Listen to Audio News</Text>
-                </TouchableOpacity>
-            </View>
-        </LinearGradient>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Loading News...</Text>
+      </View>
     );
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {articles.map((article, index) => (
+          <NewsCard
+            key={index}
+            article={article}
+            handleReadSummary={handleReadSummary}
+          />
+        ))}
+      </ScrollView>
+      <TouchableOpacity
+        style={styles.readTitlesButton}
+        onPress={toggleReadTitlesAloud}
+      >
+        <Text style={styles.readTitlesButtonText}>Read Titles Aloud</Text>
+      </TouchableOpacity>
+    </View>
+  );
 };
 
+const NewsCard = ({ article, handleReadSummary }) => (
+  <TouchableOpacity style={styles.card}>
+    <LinearGradient
+      colors={["#ffffff", "#f0f0f0"]}
+      style={styles.cardGradient}
+    >
+      <Text style={styles.cardTitle}>{article.title}</Text>
+      <Text style={styles.cardSummary}>{article.summary}</Text>
+      <TouchableOpacity
+        style={styles.readButton}
+        onPress={() => handleReadSummary(article.summary)}
+      >
+        <Text style={styles.readButtonText}>Read Summary</Text>
+      </TouchableOpacity>
+    </LinearGradient>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    header: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    headerText: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    loader: {
-        marginTop: 20,
-    },
-    footer: {
-        padding: 20,
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
-    },
-    footerText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  container: {
+    padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: "#555",
+  },
+  card: {
+    marginBottom: 15,
+    borderRadius: 10,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  cardGradient: {
+    padding: 15,
+    borderRadius: 10,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  cardSummary: {
+    fontSize: 14,
+    color: "#555",
+    marginVertical: 10,
+  },
+  readButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#ff3366",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  readButtonText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  readTitlesButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    alignItems: "center",
+    borderRadius: 5,
+    margin: 15,
+  },
+  readTitlesButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
 
-export default HomeScreen;
+export default NewsListScreen;
