@@ -43,7 +43,7 @@ def summarize_article(description: str):
     if not description:
         return "No description provided for this article."
     try:
-        summary = summarizer(description, max_length=100, min_length=50, do_sample=False)
+        summary = summarizer(description, max_length=50, min_length=30, do_sample=False)
         return summary[0]['summary_text']
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

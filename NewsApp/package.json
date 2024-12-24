@@ -11,6 +11,11 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
+<<<<<<< HEAD
+=======
+    "@expo/vector-icons": "^14.0.2",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+>>>>>>> 8d006313 (Your commit message)
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.0",
