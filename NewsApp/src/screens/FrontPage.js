@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Button } from 'react-n
 import React from 'react';
 import { clearUser } from './../services/authService';
 
-export default function FrontPage({ navigation }) {
+export default function FrontPage({ navigation, user }) {
 
   const handleLogout = async () => {
     await clearUser();
@@ -11,7 +11,14 @@ export default function FrontPage({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Button title="Logout" onPress={handleLogout} />
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
+
+      {/* Displaying User Email */}
+      {user && user.email && <Text style={styles.email}>{`Email: ${user.email}`}</Text>}
+
       <Image
         style={styles.logo}
         source={{
@@ -90,5 +97,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  // New Styles for Logout Button and Email Display
+  logoutButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: '#ff6347',
+    padding: 10,
+    borderRadius: 5,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  email: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
   },
 });
