@@ -4,7 +4,8 @@ import { Audio } from "expo-av";
 
 const NewsCard = ({ article }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [sound, setSound] = useState();
+  const [sound, setSound] = useState(null);
+  const [language, setLanguage] = useState("en"); // Default language is English
 
   const toggleSpeech = async () => {
     if (isSpeaking) {
@@ -14,9 +15,12 @@ const NewsCard = ({ article }) => {
         setIsSpeaking(false);
       }
     } else {
-      if (article.audio_base64) {
+      const audioBase64 =
+        language === "en" ? article.english_audio_base64 : article.hindi_audio_base64;
+
+      if (audioBase64) {
         try {
-          const audioUri = `data:audio/mp3;base64,${article.audio_base64}`;
+          const audioUri = `data:audio/mp3;base64,${audioBase64}`;
           const { sound } = await Audio.Sound.createAsync(
             { uri: audioUri },
             { shouldPlay: true }
@@ -38,17 +42,28 @@ const NewsCard = ({ article }) => {
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage((prevLanguage) => (prevLanguage === "en" ? "hi" : "en"));
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{article.title}</Text>
         <Text style={styles.summary}>{article.summary}</Text>
       </View>
-      <TouchableOpacity style={styles.readButton} onPress={toggleSpeech}>
-        <Text style={styles.readButtonText}>
-          {isSpeaking ? "Stop Listening" : "Listen to Summary"}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.readButton} onPress={toggleSpeech}>
+          <Text style={styles.readButtonText}>
+            {isSpeaking ? "Stop Listening" : `Listen in ${language === "en" ? "English" : "Hindi"}`}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
+          <Text style={styles.languageButtonText}>
+            Switch to {language === "en" ? "Hindi" : "English"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -72,7 +87,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "black", // Black color for title
+    color: "black",
     marginBottom: 5,
   },
   summary: {
@@ -80,13 +95,33 @@ const styles = StyleSheet.create({
     color: "#555555",
     lineHeight: 20,
   },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   readButton: {
     backgroundColor: "#1E90FF",
     paddingVertical: 10,
     borderRadius: 5,
     alignItems: "center",
+    flex: 1,
+    marginRight: 5,
   },
   readButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  languageButton: {
+    backgroundColor: "#FF6347",
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 5,
+  },
+  languageButtonText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
