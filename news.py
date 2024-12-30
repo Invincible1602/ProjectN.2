@@ -6,6 +6,7 @@ from gtts import gTTS
 import requests
 import base64
 import os
+from googletrans import Translator
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -25,6 +26,8 @@ BASE_URL = f'http://api.mediastack.com/v1/news?access_key={API_KEY}&countries=in
 
 # Load summarization pipeline
 summarizer = pipeline("summarization")
+
+translator = Translator()
 
 def fetch_news():
     """Fetch news articles from the API."""
@@ -48,10 +51,18 @@ def summarize_article(description: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def text_to_speech_base64(text: str):
+def translate_to_hindi(text: str):
+    """Translate English text to Hindi using Googletrans library."""
+    try:
+        translated = translator.translate(text, src='en', dest='hi')
+        return translated.text
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
+def text_to_speech_base64(text: str, lang: str = 'en'):
     """Convert text to speech and return the audio as base64."""
     try:
-        tts = gTTS(text)
+        tts = gTTS(text=text, lang=lang)
         audio_filename = "temp.mp3"
         tts.save(audio_filename)
 
@@ -68,7 +79,7 @@ def text_to_speech_base64(text: str):
 
 @app.get("/process-news")
 def process_news():
-    """Fetch news, generate audio summaries, and return base64 audio with categories."""
+    """Fetch news, generate audio summaries in English and Hindi, and return base64 audio with categories."""
     news_data = fetch_news()
 
     if 'data' in news_data and news_data['data']:
@@ -78,18 +89,34 @@ def process_news():
             description = article.get('description', 'No description available')
             category = article.get('category', 'No category available')
 
-            # Summarize the article (for generating audio only)
-            summary = summarize_article(description)
+            try:
+                # Summarize the article (for generating audio only)
+                summary = summarize_article(description)
 
-            # Generate audio as base64 from the summary
-            audio_base64 = text_to_speech_base64(summary)
+                # Generate English audio as base64 from the summary
+                english_audio_base64 = text_to_speech_base64(summary, lang='en')
 
-            # Append article data with category
-            processed_articles.append({
-                "title": title,
-                "category": category,
-                "audio_base64": audio_base64
-            })
+                # Translate the summary to Hindi
+                hindi_summary = translate_to_hindi(summary)
+
+                # Generate Hindi audio as base64
+                hindi_audio_base64 = text_to_speech_base64(hindi_summary, lang='hi')
+
+                # Append article data with both English and Hindi audio
+                processed_articles.append({
+                    "title": title,
+                    "category": category,
+                    "english_audio_base64": english_audio_base64,
+                    "hindi_audio_base64": hindi_audio_base64
+                })
+
+            except Exception as e:
+                # Log errors for specific articles but continue processing others
+                processed_articles.append({
+                    "title": title,
+                    "category": category,
+                    "error": f"Failed to process article: {str(e)}"
+                })
 
         return {"articles": processed_articles}
     else:
