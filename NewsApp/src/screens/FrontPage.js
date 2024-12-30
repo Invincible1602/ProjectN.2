@@ -1,9 +1,8 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { clearUser } from './../services/authService';
 
 export default function FrontPage({ navigation, user }) {
-
   const handleLogout = async () => {
     await clearUser();
     navigation.navigate('Login');
@@ -98,23 +97,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  // New Styles for Logout Button and Email Display
+  // Updated Styles for Logout Button and Email Display
   logoutButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    backgroundColor: '#ff6347',
-    padding: 10,
-    borderRadius: 5,
+    position: 'absolute', // Positions the button relative to the container
+    top: 40, // Adjust distance from the top edge
+    right: 20, // Adjust distance from the right edge
+    backgroundColor: '#ff6347', // Red background color
+    paddingVertical: 10, // Vertical padding for better touch area
+    paddingHorizontal: 12, // Horizontal padding
+    borderRadius: 5, // Rounded corners
+    zIndex: 10, // Ensures it appears above other elements
   },
   logoutText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#fff', // White text color
+    fontWeight: 'bold', // Bold text for visibility
+    fontSize: 14, // Slightly smaller font size
   },
   email: {
     position: 'absolute',
-    top: 20,
-    left: 20,
+    top: 50, // Positioned slightly below the logout button
+    left: 10, // Align with the left edge
     fontSize: 16,
     color: '#333',
     fontWeight: 'bold',
