@@ -63,7 +63,7 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <LinearGradient
-            colors={['#1c1c1c', '#333333']}
+            colors={['#f9f9f9', '#f0f0f0']}
             style={styles.container}
         >
             <Animated.View
@@ -75,7 +75,7 @@ const HomeScreen = ({ navigation }) => {
             </Animated.View>
 
             {loading ? (
-                <ActivityIndicator size="large" color="#fff" style={styles.loader} />
+                <ActivityIndicator size="large" color="#555" style={styles.loader} />
             ) : (
                 <Animated.FlatList
                     data={categoryList}
@@ -94,8 +94,8 @@ const HomeScreen = ({ navigation }) => {
             )}
 
             <View style={styles.footer}>
-                <TouchableOpacity onPress={() => navigation.navigate('News')}>
-                    <Text style={styles.footerText}>Listen to Audio News</Text>
+                <TouchableOpacity style={styles.audioButton} onPress={() => navigation.navigate('News')}>
+                    <Text style={styles.audioButtonText}>Listen to Audio News</Text>
                 </TouchableOpacity>
             </View>
         </LinearGradient>
@@ -111,11 +111,11 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#444',
+        borderBottomColor: '#ddd',
         marginBottom: 10,
     },
     headerText: {
-        color: '#fff',
+        color: '#333',
         fontSize: 26,
         fontWeight: 'bold',
         textAlign: 'center',
@@ -126,13 +126,24 @@ const styles = StyleSheet.create({
     footer: {
         padding: 20,
         alignItems: 'center',
-        backgroundColor: '#222',
+        backgroundColor: '#f5f5f5',
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
         marginTop: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
     },
-    footerText: {
-        color: '#ff4500',
+    audioButton: {
+        backgroundColor: '#333',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+    },
+    audioButtonText: {
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
