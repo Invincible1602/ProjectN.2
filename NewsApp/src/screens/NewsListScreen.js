@@ -76,12 +76,12 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   header: {
-    fontSize: 28, // Increased size for heading
+    fontSize: 28,
     fontWeight: "bold",
-    color: "black", // Black color for heading
+    color: "black",
     textAlign: "center",
     marginVertical: 20,
-    paddingTop: 30
+    paddingTop: 30,
   },
   loadingContainer: {
     flex: 1,
