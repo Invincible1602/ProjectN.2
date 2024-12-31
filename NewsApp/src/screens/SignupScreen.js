@@ -139,6 +139,15 @@ const SignupScreen = ({ navigation }) => {
           onChangeText={setPassword}
           placeholderTextColor="#888"
         />
+        {/* Password Rules */}
+      <Text style={styles.passwordRules}>
+        Password must:
+        {'\n'}• Be at least 8 characters long
+        {'\n'}• Include at least one uppercase letter
+        {'\n'}• Include at least one lowercase letter
+        {'\n'}• Include at least one number
+        {'\n'}• Include at least one special character (e.g., @$!%*?&#)
+      </Text>
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
@@ -196,6 +205,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  passwordRules: {
+    fontSize: 14,
+    color: 'gray',
+    marginBottom: 12,
+    lineHeight: 20,
   },
   buttonContainer: {
     marginBottom: 20,
