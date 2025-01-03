@@ -71,7 +71,7 @@ const HomeScreen = ({ navigation }) => {
                 exiting={FadeOutUp}
                 style={styles.header}
             >
-                <Text style={styles.headerText}>India's Latest Headlines</Text>
+                <Text style={styles.headerText}>Latest Headlines</Text>
             </Animated.View>
 
             {loading ? (
