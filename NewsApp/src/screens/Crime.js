@@ -6,11 +6,13 @@ import {
     StyleSheet,
     ActivityIndicator,
     TouchableOpacity,
+    Image,
+    Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
-const NEWS_URL = `https://newsdata.io/api/1/news?apikey=pub_62821603e0100105f92b76bbd3e010a2bb5d5&country=in&language=en&category=crime `;
+const NEWS_URL = `https://newsdata.io/api/1/news?apikey=pub_62821603e0100105f92b76bbd3e010a2bb5d5&country=in&language=en&category=crime`;
 
 const Crime = ({ navigation }) => {
     const [news, setNews] = useState([]);
@@ -22,7 +24,7 @@ const Crime = ({ navigation }) => {
         try {
             const response = await fetch(NEWS_URL);
             const data = await response.json();
-            setNews(data.results); // Set the results directly to news
+            setNews(data.results);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching news:', error);
@@ -57,12 +59,26 @@ const Crime = ({ navigation }) => {
                 <ActivityIndicator size="large" color="#555" style={styles.loader} />
             ) : (
                 <Animated.FlatList
-                    data={news} // Directly use the news data
+                    data={news}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                         <View style={styles.card}>
+                            {item.image_url && (
+                                <Image
+                                    source={{ uri: item.image_url }}
+                                    style={styles.newsImage}
+                                />
+                            )}
                             <Text style={styles.newsTitle}>{item.title}</Text>
                             <Text style={styles.newsDescription}>{item.description}</Text>
+                            {item.source_url && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(item.source_url)}
+                                    style={styles.sourceButton}
+                                >
+                                    <Text style={styles.sourceButtonText}>Read Full Article</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     )}
                     entering={FadeInDown}
@@ -137,6 +153,12 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 3,
     },
+    newsImage: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
     newsTitle: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -146,6 +168,19 @@ const styles = StyleSheet.create({
     newsDescription: {
         fontSize: 14,
         color: '#777',
+        marginBottom: 10,
+    },
+    sourceButton: {
+        backgroundColor: '#007bff',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        alignSelf: 'flex-start',
+    },
+    sourceButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 });
 

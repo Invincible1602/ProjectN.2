@@ -15,8 +15,13 @@ const NewsCard = ({ article }) => {
         setIsSpeaking(false);
       }
     } else {
-      const audioBase64 =
-        language === "en" ? article.english_audio_base64 : article.hindi_audio_base64;
+      const audioBase64 = {
+        en: article.english_audio_base64,
+        hi: article.hindi_audio_base64,
+        ta: article.tamil_audio_base64,
+        te: article.telugu_audio_base64,
+        mr: article.marathi_audio_base64,
+      }[language];
 
       if (audioBase64) {
         try {
@@ -43,7 +48,18 @@ const NewsCard = ({ article }) => {
   };
 
   const toggleLanguage = () => {
-    setLanguage((prevLanguage) => (prevLanguage === "en" ? "hi" : "en"));
+    const languages = ["en", "hi", "ta", "te", "mr"];
+    const currentIndex = languages.indexOf(language);
+    const nextLanguage = languages[(currentIndex + 1) % languages.length];
+    setLanguage(nextLanguage);
+  };
+
+  const languageNames = {
+    en: "English",
+    hi: "Hindi",
+    ta: "Tamil",
+    te: "Telugu",
+    mr: "Marathi",
   };
 
   return (
@@ -55,12 +71,12 @@ const NewsCard = ({ article }) => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.readButton} onPress={toggleSpeech}>
           <Text style={styles.readButtonText}>
-            {isSpeaking ? "Stop Listening" : `Listen in ${language === "en" ? "English" : "Hindi"}`}
+            {isSpeaking ? "Stop Listening" : `Listen in ${languageNames[language]}`}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
           <Text style={styles.languageButtonText}>
-            Switch to {language === "en" ? "Hindi" : "English"}
+            Switch to {languageNames[language === "mr" ? "en" : Object.keys(languageNames)[(Object.keys(languageNames).indexOf(language) + 1) % Object.keys(languageNames).length]]}
           </Text>
         </TouchableOpacity>
       </View>

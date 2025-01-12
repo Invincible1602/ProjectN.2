@@ -85,13 +85,6 @@ export default function FrontPage({ navigation, user }) {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Drawer Navigation Button */}
-      <Animated.View style={[styles.drawerButton, { opacity: logoutOpacity }]}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
-          <AntDesign name="ellipsis1" size={24} color="black" />
-        </TouchableOpacity>
-      </Animated.View>
-
       {/* Logo with Fade-in Animation */}
       <Animated.Image
         style={[styles.logo, { opacity: logoOpacity }]}
@@ -233,15 +226,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
-  },
-  drawerButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    zIndex: 10,
   },
   categoryButton: {
     backgroundColor: '#1e2a38',

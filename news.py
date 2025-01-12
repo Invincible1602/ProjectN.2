@@ -21,13 +21,15 @@ app.add_middleware(
 )
 
 # Define your API key and base URL
-API_KEY = '1fcd925c29b9ab4ded9b54b1db6bfafa'
+API_KEY = '072f853c6031d84760bed5acc1573551'
 BASE_URL = f'http://api.mediastack.com/v1/news?access_key={API_KEY}&countries=in&limit=30'
 
 # Load summarization pipeline
 summarizer = pipeline("summarization")
 
+# Initialize translator
 translator = Translator()
+
 
 def fetch_news():
     """Fetch news articles from the API."""
@@ -41,6 +43,7 @@ def fetch_news():
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 def summarize_article(description: str):
     """Summarize the article description."""
     if not description:
@@ -51,13 +54,15 @@ def summarize_article(description: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def translate_to_hindi(text: str):
-    """Translate English text to Hindi using Googletrans library."""
+
+def translate_text(text: str, dest: str):
+    """Translate text to a specified language."""
     try:
-        translated = translator.translate(text, src='en', dest='hi')
+        translated = translator.translate(text, src='en', dest=dest)
         return translated.text
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
 
 def text_to_speech_base64(text: str, lang: str = 'en'):
     """Convert text to speech and return the audio as base64."""
@@ -77,9 +82,10 @@ def text_to_speech_base64(text: str, lang: str = 'en'):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text-to-speech failed: {str(e)}")
 
+
 @app.get("/process-news")
 def process_news():
-    """Fetch news, generate audio summaries in English and Hindi, and return base64 audio with categories."""
+    """Fetch news, generate audio summaries in multiple languages, and return base64 audio."""
     news_data = fetch_news()
 
     if 'data' in news_data and news_data['data']:
@@ -90,26 +96,26 @@ def process_news():
             category = article.get('category', 'No category available')
 
             try:
-                # Summarize the article (for generating audio only)
+                # Summarize the article
                 summary = summarize_article(description)
 
-                # Generate English audio as base64 from the summary
+                # Generate audio in multiple languages
                 english_audio_base64 = text_to_speech_base64(summary, lang='en')
+                hindi_audio_base64 = text_to_speech_base64(translate_text(summary, 'hi'), lang='hi')
+                tamil_audio_base64 = text_to_speech_base64(translate_text(summary, 'ta'), lang='ta')
+                telugu_audio_base64 = text_to_speech_base64(translate_text(summary, 'te'), lang='te')
+                marathi_audio_base64 = text_to_speech_base64(translate_text(summary, 'mr'), lang='mr')
 
-                # Translate the summary to Hindi
-                hindi_summary = translate_to_hindi(summary)
-
-                # Generate Hindi audio as base64
-                hindi_audio_base64 = text_to_speech_base64(hindi_summary, lang='hi')
-
-                # Append article data with both English and Hindi audio
+                # Append the processed article
                 processed_articles.append({
                     "title": title,
                     "category": category,
                     "english_audio_base64": english_audio_base64,
-                    "hindi_audio_base64": hindi_audio_base64
+                    "hindi_audio_base64": hindi_audio_base64,
+                    "tamil_audio_base64": tamil_audio_base64,
+                    "telugu_audio_base64": telugu_audio_base64,
+                    "marathi_audio_base64": marathi_audio_base64,
                 })
-
             except Exception as e:
                 # Log errors for specific articles but continue processing others
                 processed_articles.append({
@@ -119,5 +125,5 @@ def process_news():
                 })
 
         return {"articles": processed_articles}
-    else:
-        raise HTTPException(status_code=404, detail="No articles found.")
+
+    raise HTTPException(status_code=404, detail="No articles found.")

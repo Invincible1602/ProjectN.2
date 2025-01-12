@@ -1,7 +1,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import NewsListScreen from "./src/screens/NewsListScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import FrontPage from "./src/screens/FrontPage";
@@ -12,36 +12,70 @@ import Crime from "./src/screens/Crime";
 import Politics from "./src/screens/Politics";
 import Sports from "./src/screens/Sports";
 import Technology from "./src/screens/Technology";
-
+import Settings from "./src/screens/Settings";
+import Icon from "react-native-vector-icons/Ionicons";
+import PrivacyPolicy from "./src/screens/PrivacyPolicy";
+import AboutUs from "./src/screens/AboutUs";
+// Stack Navigator
 const Stack = createStackNavigator();
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
 function StackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />
-      <Stack.Screen name="FrontPage" component={FrontPage} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="FrontPage" component={FrontPageWithTabs} />
       <Stack.Screen name="News" component={NewsListScreen} />
       <Stack.Screen name="BuisnessNews" component={BuisnessNews} />
       <Stack.Screen name="Crime" component={Crime} />
       <Stack.Screen name="Politics" component={Politics} />
       <Stack.Screen name="Sports" component={Sports} />
       <Stack.Screen name="Technology" component={Technology} />
+      <Stack.Screen name="Settings" component={Settings} />
+      <Stack.Screen name="Privacy Policy" component={PrivacyPolicy} />
+      <Stack.Screen name="About Us" component={AboutUs} />
     </Stack.Navigator>
   );
 }
 
+// Tab Navigator
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline"; // Filled icon if focused
+          } else if (route.name === "Settings") {
+            iconName = focused ? "settings" : "settings-outline"; // Filled icon if focused
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "blue", // Active tab color
+        tabBarInactiveTintColor: "gray", // Inactive tab color
+      })}
+    >
+      <Tab.Screen name="Home" component={FrontPage} />
+      <Tab.Screen name="Settings" component={Settings} />
+    </Tab.Navigator>
+  );
+}
+
+// Wrapper for FrontPage with Tabs
+function FrontPageWithTabs() {
+  return <TabNavigator />;
+}
+
+// Main App
 export default function App() {
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
-        <Drawer.Screen name="Home" component={StackNavigator} />
-        <Drawer.Screen name="Current News" component={HomeScreen} />
-        <Drawer.Screen name="Audio News" component={NewsListScreen} />
-        
-      </Drawer.Navigator>
+      <StackNavigator />
     </NavigationContainer>
   );
 }
