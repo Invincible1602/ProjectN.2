@@ -16,6 +16,8 @@ import Settings from "./src/screens/Settings";
 import Icon from "react-native-vector-icons/Ionicons";
 import PrivacyPolicy from "./src/screens/PrivacyPolicy";
 import AboutUs from "./src/screens/AboutUs";
+import Market from "./src/screens/Market";
+
 // Stack Navigator
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -26,6 +28,7 @@ function StackNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="FrontPage" component={FrontPageWithTabs} />
+      <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="News" component={NewsListScreen} />
       <Stack.Screen name="BuisnessNews" component={BuisnessNews} />
       <Stack.Screen name="Crime" component={Crime} />
@@ -35,6 +38,7 @@ function StackNavigator() {
       <Stack.Screen name="Settings" component={Settings} />
       <Stack.Screen name="Privacy Policy" component={PrivacyPolicy} />
       <Stack.Screen name="About Us" component={AboutUs} />
+      <Stack.Screen name="Market" component={Market} />
     </Stack.Navigator>
   );
 }
@@ -48,19 +52,36 @@ function TabNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === "Home") {
+          if (route.name === "FirstPage") {
             iconName = focused ? "home" : "home-outline"; // Filled icon if focused
           } else if (route.name === "Settings") {
             iconName = focused ? "settings" : "settings-outline"; // Filled icon if focused
+          } else if (route.name === "Market News") {
+            iconName = focused ? "trending-up" : "trending-up-outline"; // Filled icon if focused
           }
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "blue", // Active tab color
-        tabBarInactiveTintColor: "gray", // Inactive tab color
+        tabBarActiveTintColor: "#007AFF", // Blue color for active tabs
+        tabBarInactiveTintColor: "#8E8E93", // Gray for inactive tabs
+        tabBarStyle: {
+          backgroundColor: "white",
+          borderTopWidth: 1,
+          borderTopColor: "#E5E5EA",
+          height: 60,
+          elevation: 10, // Adds shadow for Android
+        },
+        tabBarItemStyle: {
+          paddingVertical: 5,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "bold",
+        },
       })}
     >
-      <Tab.Screen name="Home" component={FrontPage} />
+      <Tab.Screen name="FirstPage" component={FrontPage} />
+      <Tab.Screen name="Market News" component={Market} />
       <Tab.Screen name="Settings" component={Settings} />
     </Tab.Navigator>
   );

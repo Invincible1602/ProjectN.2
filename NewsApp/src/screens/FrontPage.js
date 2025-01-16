@@ -1,12 +1,14 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView, RefreshControl, Modal, FlatList } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, Text, View, Animated, ScrollView, RefreshControl, Modal, FlatList, TouchableOpacity } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { clearUser } from './../services/authService';
+import TextAnimator from './../components/TextAnimator'; // Import TextAnimator component
 
 export default function FrontPage({ navigation, user }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false); // State for category modal
+  const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0); // Add key to reset the TextAnimator
 
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0)).current;
@@ -38,7 +40,8 @@ export default function FrontPage({ navigation, user }) {
 
     setTimeout(() => {
       setIsRefreshing(false);
-      console.log("Data refreshed");
+      console.log('Data refreshed');
+      setRefreshKey(prev => prev + 1); // Increment the key to trigger re-render of TextAnimator
     }, 2000);
   };
 
@@ -76,7 +79,9 @@ export default function FrontPage({ navigation, user }) {
   return (
     <ScrollView
       contentContainerStyle={styles.contentContainer}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+      }
     >
       {/* Logout Button */}
       <Animated.View style={[styles.logoutButton, { opacity: logoutOpacity }]}>
@@ -92,11 +97,30 @@ export default function FrontPage({ navigation, user }) {
           uri: 'https://th.bing.com/th/id/OIP.fmZdo6kLTCGENw6l_NvogwHaHD?rs=1&pid=ImgDetMain',
         }}
       />
-      <Text style={styles.heading}>Welcome to NewsExpress</Text>
-      <Text style={styles.subheading}>Stay Updated with the Latest Headlines</Text>
-      <Text style={styles.text}>
-        Explore the latest news articles and listen to audio news. Choose your preferred option below.
-      </Text>
+
+      {/* Welcome Heading with TextAnimator */}
+      <TextAnimator
+        key={`heading-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Welcome to NewsExpress"
+        textStyle={styles.heading}
+        style={styles.textWrapper}
+      />
+
+      {/* Subheading with TextAnimator */}
+      <TextAnimator
+        key={`subheading-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Stay Updated with the Latest Headlines"
+        textStyle={styles.subheading}
+        style={styles.textWrapper}
+      />
+
+      {/* Description Text with TextAnimator */}
+      <TextAnimator
+        key={`description-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Explore the latest news articles and listen to audio news. Choose your preferred option below."
+        textStyle={styles.text}
+        style={styles.textWrapper}
+      />
 
       {/* Category Button */}
       <TouchableOpacity
@@ -131,7 +155,7 @@ export default function FrontPage({ navigation, user }) {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Category</Text>
             <FlatList
-              data={['BuisnessNews', 'Crime', 'Politics', 'Sports', 'Technology']}
+              data={['BusinessNews', 'Crime', 'Politics', 'Sports', 'Technology']}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.categoryItem}
@@ -171,24 +195,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ddd',
   },
+  textWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
   heading: {
     fontSize: 32,
     fontWeight: '700',
     color: '#1e2a38',
-    marginBottom: 10,
     textAlign: 'center',
   },
   subheading: {
     fontSize: 20,
     color: '#555',
-    marginBottom: 20,
     textAlign: 'center',
   },
   text: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 30,
     paddingHorizontal: 10,
   },
   card: {
@@ -238,6 +265,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+    padding:5,
   },
   modalContainer: {
     flex: 1,
@@ -261,17 +289,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
+    width: '100%',
   },
   categoryItemText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
+    textAlign: 'center',
   },
   closeButton: {
     marginTop: 20,
-    backgroundColor: '#ff4757',
+    backgroundColor: '#1e2a38',
     paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 5,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   closeButtonText: {
     color: '#fff',
