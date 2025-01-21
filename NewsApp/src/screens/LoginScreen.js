@@ -1,16 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Animated, Image } from 'react-native';
-import { getUser } from './../services/authService';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDMd7bVffR1UgE9OtI9I5hSgvZ9-XNtr-Q",
+  authDomain: "projectn-a45be.firebaseapp.com",
+  projectId: "projectn-a45be",
+  storageBucket: "projectn-a45be.firebasestorage.app",
+  messagingSenderId: "535190005319",
+  appId: "1:535190005319:web:959185281f633d583f7362",
+  measurementId: "G-BRHRLRDJTS"
+};
+
+// Initialize Firebase if not already initialized
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+} else {
+  firebase.app(); // if already initialized
+}
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [logoOpacity] = useState(new Animated.Value(0)); // Animation state
 
-  const logoUri = 'https://th.bing.com/th/id/OIP.fmZdo6kLTCGENw6l_NvogwHaHD?rs=1&pid=ImgDetMain'; // Replace with your logo URI
+  const logoUri = 'https://th.bing.com/th/id/OIP.fmZdo6kLTCGENw6l_NvogwHaHD?rs=1&pid=ImgDetMain';
 
   useEffect(() => {
-    // Fade in the logo on component mount
     Animated.timing(logoOpacity, {
       toValue: 1,
       duration: 1500,
@@ -18,37 +36,23 @@ const LoginScreen = ({ navigation }) => {
     }).start();
   }, [logoOpacity]);
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  };
-
   const handleLogin = async () => {
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-
-    const user = await getUser();
-
-    if (user && user.email === email && user.password === password) {
-      // Navigate to the FrontPage if login is successful
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+      Alert.alert('Login Successful', 'Welcome back!');
       navigation.navigate('FrontPage');
-    } else {
-      // Show an alert if login fails
-      Alert.alert('Login failed', 'Incorrect email or password');
+    } catch (error) {
+      Alert.alert('Login Error', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Animated logo */}
       <Animated.View style={{ opacity: logoOpacity }}>
         <Image source={{ uri: logoUri }} style={styles.logo} />
       </Animated.View>
 
       <Text style={styles.title}>Login to News App</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -65,7 +69,6 @@ const LoginScreen = ({ navigation }) => {
         onChangeText={setPassword}
         placeholderTextColor="#888"
       />
-      
       <View style={styles.buttonContainer}>
         <Button title="Login" onPress={handleLogin} color="#007BFF" />
       </View>
@@ -81,40 +84,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 30,
-    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
   },
   logo: {
-    width: 120,
-    height: 120,
-    alignSelf: 'center',
-    marginBottom: 30,
+    width: 100,
+    height: 100,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#333',
+    marginBottom: 20,
   },
   input: {
-    height: 45,
+    width: '100%',
+    height: 50,
     borderColor: '#ccc',
     borderWidth: 1,
-    marginBottom: 20,
-    paddingLeft: 15,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    fontSize: 16,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   buttonContainer: {
-    marginTop: 20,
-    borderRadius: 5,
+    width: '100%',
+    marginBottom: 20,
   },
   linkText: {
-    marginTop: 20,
     color: '#007BFF',
-    textAlign: 'center',
     fontSize: 16,
   },
 });

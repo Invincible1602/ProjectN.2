@@ -1,23 +1,25 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Animated, ScrollView, RefreshControl } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, Text, View, Animated, ScrollView, RefreshControl, Modal, FlatList, TouchableOpacity } from 'react-native';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { clearUser } from './../services/authService';
+import TextAnimator from './../components/TextAnimator'; // Import TextAnimator component
 
 export default function FrontPage({ navigation, user }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0); // Add key to reset the TextAnimator
 
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0)).current;
   const logoutOpacity = useRef(new Animated.Value(0)).current;
 
-  // Simulate a refresh action
   const onRefresh = async () => {
     setIsRefreshing(true);
-    // Reset the animation values to trigger the animation again
     logoOpacity.setValue(0);
     logoutOpacity.setValue(0);
     cardScale.setValue(0);
 
-    // Trigger the animation sequence again
     Animated.sequence([
       Animated.timing(logoOpacity, {
         toValue: 1,
@@ -36,16 +38,14 @@ export default function FrontPage({ navigation, user }) {
       }),
     ]).start();
 
-    // Simulate a delay for refreshing
     setTimeout(() => {
       setIsRefreshing(false);
-      // You can replace this with your data fetching logic
-      console.log("Data refreshed");
-    }, 2000); // 2-second delay to simulate refresh
+      console.log('Data refreshed');
+      setRefreshKey(prev => prev + 1); // Increment the key to trigger re-render of TextAnimator
+    }, 2000);
   };
 
   useEffect(() => {
-    // Initial animation on mount
     Animated.sequence([
       Animated.timing(logoOpacity, {
         toValue: 1,
@@ -70,6 +70,12 @@ export default function FrontPage({ navigation, user }) {
     navigation.navigate('Login');
   };
 
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setModalVisible(false); // Close modal after selection
+    navigation.navigate(category); // Navigate to the category page
+  };
+
   return (
     <ScrollView
       contentContainerStyle={styles.contentContainer}
@@ -91,16 +97,43 @@ export default function FrontPage({ navigation, user }) {
           uri: 'https://th.bing.com/th/id/OIP.fmZdo6kLTCGENw6l_NvogwHaHD?rs=1&pid=ImgDetMain',
         }}
       />
-      <Text style={styles.heading}>Welcome to NewsExpress</Text>
-      <Text style={styles.subheading}>Stay Updated with the Latest Headlines</Text>
-      <Text style={styles.text}>
-        Explore the latest news articles and listen to audio news. Choose your preferred option below.
-      </Text>
-      
+
+      {/* Welcome Heading with TextAnimator */}
+      <TextAnimator
+        key={`heading-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Welcome to NewsExpress"
+        textStyle={styles.heading}
+        style={styles.textWrapper}
+      />
+
+      {/* Subheading with TextAnimator */}
+      <TextAnimator
+        key={`subheading-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Stay Updated with the Latest Headlines"
+        textStyle={styles.subheading}
+        style={styles.textWrapper}
+      />
+
+      {/* Description Text with TextAnimator */}
+      <TextAnimator
+        key={`description-${refreshKey}`} // Reset TextAnimator by changing the key
+        content="Explore the latest news articles and listen to audio news. Choose your preferred option below."
+        textStyle={styles.text}
+        style={styles.textWrapper}
+      />
+
+      {/* Category Button */}
+      <TouchableOpacity
+        style={styles.categoryButton}
+        onPress={() => setModalVisible(true)} // Open the modal when clicked
+      >
+        <Text style={styles.categoryText}>Select Category</Text>
+      </TouchableOpacity>
+
       {/* Latest News Card with Scale Animation */}
       <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.cardText}>Latest News</Text>
+          <Text style={styles.cardText}>Breaking News</Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -110,14 +143,46 @@ export default function FrontPage({ navigation, user }) {
           <Text style={styles.cardText}>Audio News</Text>
         </TouchableOpacity>
       </Animated.View>
+
+      {/* Category Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Category</Text>
+            <FlatList
+              data={['BusinessNews', 'Crime', 'Politics', 'Sports', 'Technology']}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.categoryItem}
+                  onPress={() => handleCategorySelect(item)}
+                >
+                  <Text style={styles.categoryItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   contentContainer: {
-    flexGrow: 1, // Ensures the container takes up the full available space
-    backgroundColor: '#f0f0f0', // Soft gray background for a serious feel
+    flexGrow: 1,
+    backgroundColor: '#f0f0f0',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -128,63 +193,119 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: '#ddd', // Light border for professional touch
+    borderColor: '#ddd',
+  },
+  textWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   heading: {
     fontSize: 32,
-    fontWeight: '700', // Bold for seriousness
-    color: '#1e2a38', // Dark blue-gray for text
-    marginBottom: 10,
+    fontWeight: '700',
+    color: '#1e2a38',
     textAlign: 'center',
   },
   subheading: {
     fontSize: 20,
-    color: '#555', // Dark gray for subheading
-    marginBottom: 20,
+    color: '#555',
     textAlign: 'center',
   },
   text: {
     fontSize: 16,
-    color: '#666', // Lighter gray for body text
+    color: '#666',
     textAlign: 'center',
-    marginBottom: 30,
     paddingHorizontal: 10,
   },
   card: {
-    backgroundColor: '#ffffff', // White background for cards
+    backgroundColor: '#ffffff',
     width: '85%',
     paddingVertical: 15,
     marginBottom: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd', // Light border for separation
+    borderColor: '#ddd',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3, // Slight shadow for depth
+    elevation: 3,
   },
   cardText: {
     fontSize: 18,
-    fontWeight: '600', // Slightly bold for readability
-    color: '#1e2a38', // Dark blue-gray for text
+    fontWeight: '600',
+    color: '#1e2a38',
   },
-  // Updated Styles for Logout Button
   logoutButton: {
-    position: 'absolute', // Positioned at the top-right
+    position: 'absolute',
     top: 40,
     right: 20,
-    backgroundColor: '#ff4757', // Soft red for logout button
+    backgroundColor: '#ff4757',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
-    zIndex: 10, // Ensure it appears above other elements
+    zIndex: 10,
   },
   logoutText: {
-    color: '#fff', // White text for visibility
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  categoryButton: {
+    backgroundColor: '#1e2a38',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginBottom: 30,
+  },
+  categoryText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    padding:5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    width: '80%',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 20,
+  },
+  categoryItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    width: '100%',
+  },
+  categoryItemText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: '#1e2a38',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

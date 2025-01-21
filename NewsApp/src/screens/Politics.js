@@ -6,16 +6,15 @@ import {
     StyleSheet,
     ActivityIndicator,
     TouchableOpacity,
-    Linking,
     Image,
+    Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
-const API_KEY = '072f853c6031d84760bed5acc1573551';
-const NEWS_URL = `http://api.mediastack.com/v1/news?access_key=${API_KEY}&countries=in&limit=30`;
+const NEWS_URL = `https://newsdata.io/api/1/news?apikey=pub_62821603e0100105f92b76bbd3e010a2bb5d5&country=in&language=en&category=politics`;
 
-const HomeScreen = ({ navigation }) => {
+const Politics = ({ navigation }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -25,7 +24,7 @@ const HomeScreen = ({ navigation }) => {
         try {
             const response = await fetch(NEWS_URL);
             const data = await response.json();
-            setNews(data.data); // Updated for correct API response structure
+            setNews(data.results); // Set the results directly to news
             setLoading(false);
         } catch (error) {
             console.error('Error fetching news:', error);
@@ -43,30 +42,6 @@ const HomeScreen = ({ navigation }) => {
         setRefreshing(false);
     };
 
-    const renderNewsItem = ({ item }) => (
-        <View style={styles.newsItem}>
-            {item.image && (
-                <Image source={{ uri: item.image }} style={styles.newsImage} />
-            )}
-            <Text style={styles.newsTitle}>{item.title}</Text>
-            <Text style={styles.newsDescription}>{item.description}</Text>
-            <Text style={styles.newsSource}>
-                Source: {item.source || 'Unknown'}
-            </Text>
-            <Text style={styles.newsDate}>
-                Published: {new Date(item.published_at).toLocaleDateString()}
-            </Text>
-            {item.url && (
-                <TouchableOpacity
-                    onPress={() => Linking.openURL(item.url)}
-                    style={styles.urlButton}
-                >
-                    <Text style={styles.urlText}>Read Full Article</Text>
-                </TouchableOpacity>
-            )}
-        </View>
-    );
-
     return (
         <LinearGradient
             colors={['#f9f9f9', '#f0f0f0']}
@@ -77,16 +52,35 @@ const HomeScreen = ({ navigation }) => {
                 exiting={FadeOutUp}
                 style={styles.header}
             >
-                <Text style={styles.headerText}>Latest Headlines</Text>
+                <Text style={styles.headerText}>Politics News</Text>
             </Animated.View>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#555" style={styles.loader} />
             ) : (
                 <Animated.FlatList
-                    data={news}
-                    keyExtractor={(item) => item.url}
-                    renderItem={renderNewsItem}
+                    data={news} // Directly use the news data
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.card}>
+                            {item.image_url && (
+                                <Image
+                                    source={{ uri: item.image_url }}
+                                    style={styles.newsImage}
+                                />
+                            )}
+                            <Text style={styles.newsTitle}>{item.title}</Text>
+                            <Text style={styles.newsDescription}>{item.description}</Text>
+                            {item.source_url && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(item.source_url)}
+                                    style={styles.sourceButton}
+                                >
+                                    <Text style={styles.sourceButtonText}>Read Full Article</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
                     entering={FadeInDown}
                     exiting={FadeOutUp}
                     refreshing={refreshing}
@@ -95,10 +89,7 @@ const HomeScreen = ({ navigation }) => {
             )}
 
             <View style={styles.footer}>
-                <TouchableOpacity
-                    style={styles.audioButton}
-                    onPress={() => navigation.navigate('News')}
-                >
+                <TouchableOpacity style={styles.audioButton} onPress={() => navigation.navigate('News')}>
                     <Text style={styles.audioButtonText}>Listen to Audio News</Text>
                 </TouchableOpacity>
             </View>
@@ -127,58 +118,6 @@ const styles = StyleSheet.create({
     loader: {
         marginTop: 20,
     },
-    newsItem: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 15,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-    },
-    newsImage: {
-        width: '100%',
-        height: 180,
-        borderRadius: 8,
-        marginBottom: 10,
-        resizeMode: 'cover',
-    },
-    newsTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: '#222',
-    },
-    newsDescription: {
-        fontSize: 16,
-        color: '#444',
-        marginBottom: 10,
-    },
-    newsSource: {
-        fontSize: 14,
-        color: '#777',
-        marginBottom: 4,
-    },
-    newsDate: {
-        fontSize: 12,
-        color: '#999',
-        fontStyle: 'italic',
-        marginBottom: 8,
-    },
-    urlButton: {
-        marginTop: 10,
-        padding: 10,
-        backgroundColor: '#333',
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    urlText: {
-        fontSize: 16,
-        color: '#fff',
-        fontWeight: 'bold',
-    },
     footer: {
         padding: 20,
         alignItems: 'center',
@@ -203,6 +142,46 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    card: {
+        backgroundColor: '#fff',
+        padding: 15,
+        marginBottom: 20,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    newsImage: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    newsTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10,
+    },
+    newsDescription: {
+        fontSize: 14,
+        color: '#777',
+        marginBottom: 10,
+    },
+    sourceButton: {
+        backgroundColor: '#007bff',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        alignSelf: 'flex-start',
+    },
+    sourceButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
 });
 
-export default HomeScreen;
+export default Politics;
